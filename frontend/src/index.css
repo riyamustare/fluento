@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* Custom font: CasinoHand */
+@font-face {
+	font-family: 'DSSweetKiss';
+	src: url('./fonts/DSSweetKiss.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+    
+}
+
+@font-face {
+	font-family: 'Aeroport';
+	src: url('./fonts/Aeroport.otf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+    
+}
+
+.font-casino {
+    font-family: 'DSSweetKiss', Inter, system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  letter-spacing: 1px;
+  line-height: 1.4;
+  color: #111827;
+}
+
+/* Global app heading styles to match LevelsDashboard aesthetic */
+h1, h2, h3, h4, .app-heading {
+	font-family: 'DSSweetKiss', Inter, system-ui, -apple-system, sans-serif;
+	color: #0f172a; /* slightly darker neutral */
+	letter-spacing: 0.6px;
+	line-height: 1.2;
+}
+
+/* Small helper for section subtitles to keep consistency - Aeroport is primary font for all body/subtext */
+.app-subtitle {
+  font-family: 'Aeroport', Inter, system-ui, -apple-system, sans-serif;
+  color: #475569;
+}
+
+/* Apply Aeroport as primary font for body text globally */
+body, p, span, label, input, select, button, textarea {
+  font-family: 'Aeroport', Inter, system-ui, -apple-system, sans-serif;
+}

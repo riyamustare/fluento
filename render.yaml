@@ -1,0 +1,118 @@
+# Render Blueprint Configuration
+# Place this file in the project root (fluento/)
+# Structure: frontend/ and backend/ (with backend/fastapi_service/ inside)
+
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: fluento-db
+    env: docker
+    plan: free
+    region: oregon
+    
+  # Redis Instance for Job Queue and Caching
+  - type: redis
+    name: fluento-redis
+    plan: free
+    region: oregon
+    ipAllowList: []
+
+  # Django REST API (Main Backend)
+  - type: web
+    name: fluento-backend
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: "pip install -r backend/requirements.txt && cd backend && python manage.py collectstatic --noinput && python manage.py migrate"
+    startCommand: "cd backend && gunicorn core.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    healthCheckPath: /api/health/
+    envVars:
+      - key: PYTHON_VERSION
+        value: '3.11'
+      - key: DJANGO_DEBUG
+        value: 'False'
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_SETTINGS_MODULE
+        value: 'core.settings'
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fluento-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: fluento-redis
+          type: redis
+          property: connectionString
+      - key: DJANGO_ALLOWED_HOSTS
+        value: '.onrender.com,localhost,127.0.0.1'
+      - key: DJANGO_ENV
+        value: 'production'
+      - key: CORS_ALLOWED_ORIGINS
+        value: 'https://YOUR_VERCEL_APP.vercel.app'
+      - key: SECURE_SSL_REDIRECT
+        value: 'True'
+      - key: SESSION_COOKIE_SECURE
+        value: 'True'
+      - key: CSRF_COOKIE_SECURE
+        value: 'True'
+
+  # FastAPI AI Service (API Endpoint for Speech Analysis)
+  - type: web
+    name: fluento-ai-api
+    env: python
+    plan: free
+    region: oregon
+    # Install both Django requirements (for shared models) and FastAPI requirements
+    buildCommand: "pip install -r backend/requirements.txt"
+    startCommand: "cd backend/fastapi_service && uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1"
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: '3.11'
+      - key: REDIS_URL
+        fromService:
+          name: fluento-redis
+          type: redis
+          property: connectionString
+      - key: ASSEMBLYAI_API_KEY
+        sync: false  # You'll add this manually in Render dashboard
+      - key: GEMINI_API_KEY
+        sync: false  # You'll add this manually in Render dashboard
+      - key: ASSEMBLYAI_CALLBACK_URL
+        value: 'https://fluento-ai-api.onrender.com/api/assemblyai_callback/'
+
+  # RQ Workers for Background Job Processing
+  - type: worker
+    name: fluento-ai-worker
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: "pip install -r backend/requirements.txt"
+    startCommand: "cd backend/fastapi_service && bash worker-start.sh"
+    envVars:
+      - key: PYTHON_VERSION
+        value: '3.11'
+      - key: REDIS_URL
+        fromService:
+          name: fluento-redis
+          type: redis
+          property: connectionString
+      - key: ASSEMBLYAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: WORKER_COUNT
+        value: '2'
+
+# Important Notes:
+# 1. Update CORS_ALLOWED_ORIGINS after deploying to Vercel
+# 2. Add API keys manually in Render dashboard after deployment:
+#    - Go to each service → Environment
+#    - Add ASSEMBLYAI_API_KEY
+#    - Add GEMINI_API_KEY
+# 3. After first deployment, run in Render Shell:
+#    - python manage.py createsuperuser
+#    - python manage.py populate_levels (if you have this command)
+# 4. Free tier services sleep after 15 minutes of inactivity
+#    First request after sleep will be slow (~30s)

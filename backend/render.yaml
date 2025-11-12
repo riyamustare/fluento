@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: s2s-backend
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput"
+    startCommand: "gunicorn core.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: DJANGO_DEBUG
+        value: 'False'
+      - key: DJANGO_SECRET_KEY
+        generator: secret
+      - key: DATABASE_URL
+        fromDatabase: false
+  - type: worker
+    name: s2s-worker
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "bash ./fastapi_service/worker-start.sh"
+    envVars:
+      - key: REDIS_URL
+        fromDatabase: false

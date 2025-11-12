@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7
+    ports:
+      - '6379:6379'
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    ports:
+      - '8000:8000'
+    environment:
+      - DJANGO_DEBUG=True
+      - DJANGO_SECRET_KEY=dev-secret
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/s2s_db
+      - REDIS_URL=redis://redis:6379/0
+      - ASSEMBLYAI_CALLBACK_URL=http://host.docker.internal:8000/api/assemblyai_callback/
+    depends_on:
+      - redis
+    restart: on-failure
+
+  worker:
+    build: ./backend
+    command: bash ./fastapi_service/worker-start.sh
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - WORKER_COUNT=2
+    depends_on:
+      - redis
+      - backend
+    restart: on-failure
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    volumes:
+      - ./backend/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - '9090:9090'
+    restart: unless-stopped
+
+# Optional Postgres service for local testing
+# Uncomment if you want a local Postgres instance
+#  postgres:
+#    image: postgres:15
+#    environment:
+#      - POSTGRES_USER=postgres
+#      - POSTGRES_PASSWORD=postgres
+#      - POSTGRES_DB=s2s_db
+#    ports:
+#      - '5432:5432'
+#    restart: unless-stopped

@@ -1,0 +1,154 @@
+import os
+from pathlib import Path
+from datetime import timedelta
+from decouple import config
+import dj_database_url
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# SECURITY - read sensitive settings from environment
+# Allow legacy 'SECRET_KEY' env var as fallback for flexibility
+SECRET_KEY = config('DJANGO_SECRET_KEY', default=os.environ.get('SECRET_KEY', 'dev-secret-key'))
+
+# Default to False in production unless explicitly enabled
+DEBUG = config('DJANGO_DEBUG', default='False') == 'True'
+
+# Read allowed hosts from env var (comma separated). If not provided, default to ['*']
+_allowed = config('DJANGO_ALLOWED_HOSTS', default='')
+if _allowed:
+    ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()]
+else:
+    ALLOWED_HOSTS = ['*']
+
+# Application definition
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'rest_framework',
+    'corsheaders',
+    'app',
+]
+
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'core.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'core.wsgi.application'
+
+# Database
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+# If a DATABASE_URL is present (Render/postgres), use dj_database_url to configure
+DATABASE_URL = os.environ.get('DATABASE_URL') or config('DATABASE_URL', default='')
+if DATABASE_URL:
+    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
+
+# Use persistent DB connections for performance under load
+CONN_MAX_AGE = int(config('CONN_MAX_AGE', default='600'))
+for db in DATABASES.values():
+    db.setdefault('CONN_MAX_AGE', CONN_MAX_AGE)
+
+# Custom user model
+AUTH_USER_MODEL = 'app.CustomUser'
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_L10N = True
+USE_TZ = True
+
+STATIC_URL = '/static/'
+
+# Whitenoise static files (production)
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# When behind a proxy (Render), honor X-Forwarded-Proto for secure redirects
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+# Production security settings - ONLY enable in production
+# Check if we're in production by looking for DATABASE_URL or explicit ENV setting
+IS_PRODUCTION = bool(DATABASE_URL) or config('DJANGO_ENV', default='development') == 'production'
+
+if IS_PRODUCTION:
+    # Production security settings
+    SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default='True') == 'True'
+    CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default='True') == 'True'
+    SECURE_HSTS_SECONDS = int(config('SECURE_HSTS_SECONDS', default='31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default='True') == 'True'
+    SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default='True') == 'True'
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default='True') == 'True'
+    X_FRAME_OPTIONS = 'DENY'
+else:
+    # Development settings - disable HTTPS requirements
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
+    SECURE_SSL_REDIRECT = False
+    X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+}
