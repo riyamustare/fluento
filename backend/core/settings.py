@@ -8,13 +8,12 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY - read sensitive settings from environment
-# Allow legacy 'SECRET_KEY' env var as fallback for flexibility
 SECRET_KEY = config('DJANGO_SECRET_KEY', default=os.environ.get('SECRET_KEY', 'dev-secret-key'))
 
 # Default to False in production unless explicitly enabled
 DEBUG = config('DJANGO_DEBUG', default='False') == 'True'
 
-# Read allowed hosts from env var (comma separated). If not provided, default to ['*']
+# Read allowed hosts from env var (comma separated)
 _allowed = config('DJANGO_ALLOWED_HOSTS', default='')
 if _allowed:
     ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()]
@@ -87,6 +86,9 @@ for db in DATABASES.values():
 # Custom user model
 AUTH_USER_MODEL = 'app.CustomUser'
 
+# Default primary key field type (Django 3.2+)
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -117,13 +119,17 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # When behind a proxy (Render), honor X-Forwarded-Proto for secure redirects
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-CORS_ALLOW_ALL_ORIGINS = True
-
-# Production security settings - ONLY enable in production
-# Check if we're in production by looking for DATABASE_URL or explicit ENV setting
+# CORS Settings - Improved Security
 IS_PRODUCTION = bool(DATABASE_URL) or config('DJANGO_ENV', default='development') == 'production'
 
 if IS_PRODUCTION:
+    # Production: Only allow specific origins
+    CORS_ALLOWED_ORIGINS = config(
+        'CORS_ALLOWED_ORIGINS',
+        default='https://fluento.vercel.app'
+    ).split(',')
+    CORS_ALLOW_CREDENTIALS = True
+    
     # Production security settings
     SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default='True') == 'True'
     CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default='True') == 'True'
@@ -133,6 +139,10 @@ if IS_PRODUCTION:
     SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default='True') == 'True'
     X_FRAME_OPTIONS = 'DENY'
 else:
+    # Development: Allow all origins
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_CREDENTIALS = True
+    
     # Development settings - disable HTTPS requirements
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
