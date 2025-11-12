@@ -2,13 +2,15 @@
 # Place this file in the project root (fluento/)
 # Structure: frontend/ and backend/ (with backend/fastapi_service/ inside)
 
-services:
+databases:
   # PostgreSQL Database
-  - type: pserv
-    name: fluento-db
-    env: docker
+  - name: fluento-db
+    databaseName: fluento
+    user: fluento
     plan: free
     region: oregon
+
+services:
     
   # Redis Instance for Job Queue and Caching
   - type: redis
