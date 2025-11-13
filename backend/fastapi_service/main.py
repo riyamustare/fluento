@@ -388,6 +388,40 @@ async def analyze_speech(audio: UploadFile = File(...), topic: str = Form(...)):
                 {'detail': 'Transcription failed. Please check AssemblyAI API key.'}, 
                 status_code=500
             )
+        
+        # Handle webhook pending case - wait for the transcript to be available
+        if isinstance(transcript, str) and transcript.startswith('__webhook_pending__:'):
+            _, transcript_id = transcript.split(':', 1)
+            print(f"[ANALYZE_SPEECH] Webhook pending, waiting for transcript {transcript_id}")
+            from redis import Redis
+            redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+            redis_conn = Redis.from_url(redis_url)
+            
+            # Wait up to 120 seconds for webhook to provide the transcript
+            waited = 0
+            final_transcript = None
+            while waited < 120:
+                key = f'assemblyai:result:{transcript_id}'
+                raw = redis_conn.get(key)
+                if raw:
+                    try:
+                        payload = json.loads(raw)
+                        final_transcript = payload.get('text')
+                        if final_transcript:
+                            print(f"[ANALYZE_SPEECH] Transcript received from webhook: {final_transcript[:100]}...")
+                            break
+                    except Exception as e:
+                        print(f"[ANALYZE_SPEECH] Error parsing webhook result: {e}")
+                        break
+                await asyncio.sleep(1)
+                waited += 1
+            
+            if not final_transcript:
+                return JSONResponse(
+                    {'detail': 'Transcription timeout. Please try again.'}, 
+                    status_code=500
+                )
+            transcript = final_transcript
 
         analysis = await analyze_with_gemini(transcript, topic, mode='speak')
         return JSONResponse(analysis)
@@ -412,6 +446,40 @@ async def analyze_reading(audio: UploadFile = File(...), topic: str = Form(...))
                 {'detail': 'Transcription failed. Please check AssemblyAI API key.'}, 
                 status_code=500
             )
+        
+        # Handle webhook pending case - wait for the transcript to be available
+        if isinstance(transcript, str) and transcript.startswith('__webhook_pending__:'):
+            _, transcript_id = transcript.split(':', 1)
+            print(f"[ANALYZE_READING] Webhook pending, waiting for transcript {transcript_id}")
+            from redis import Redis
+            redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+            redis_conn = Redis.from_url(redis_url)
+            
+            # Wait up to 120 seconds for webhook to provide the transcript
+            waited = 0
+            final_transcript = None
+            while waited < 120:
+                key = f'assemblyai:result:{transcript_id}'
+                raw = redis_conn.get(key)
+                if raw:
+                    try:
+                        payload = json.loads(raw)
+                        final_transcript = payload.get('text')
+                        if final_transcript:
+                            print(f"[ANALYZE_READING] Transcript received from webhook: {final_transcript[:100]}...")
+                            break
+                    except Exception as e:
+                        print(f"[ANALYZE_READING] Error parsing webhook result: {e}")
+                        break
+                await asyncio.sleep(1)
+                waited += 1
+            
+            if not final_transcript:
+                return JSONResponse(
+                    {'detail': 'Transcription timeout. Please try again.'}, 
+                    status_code=500
+                )
+            transcript = final_transcript
 
         analysis = await analyze_with_gemini(transcript, topic, mode='read')
         # Emphasize pronunciation / tone in feedback (already in Gemini prompt)
