@@ -19,7 +19,14 @@ _allowed = config('DJANGO_ALLOWED_HOSTS', default='')
 if _allowed:
     ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()]
 else:
-    ALLOWED_HOSTS = ['*']  # Safe for dev; override in production
+    ALLOWED_HOSTS = [
+        'fluentoai.vercel.app',
+        'fluento-fm9vy9bv6-riyas-projects-602fe862.vercel.app',
+        'fluento-taupe.vercel.app',
+        '.vercel.app',  # allow all Vercel preview domains
+        'localhost',
+        '127.0.0.1',
+    ]
 
 # -------------------------------------------------------------------
 # APPLICATIONS
@@ -136,31 +143,28 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # SECURITY HEADERS FOR RENDER
 # -------------------------------------------------------------------
 
-# Honor X-Forwarded-Proto when behind proxy
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # -------------------------------------------------------------------
-# CORS CONFIGURATION (UPDATED & SAFE)
+# CORS CONFIGURATION
 # -------------------------------------------------------------------
-
-# Safe CORS rules (development vs production)
 
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
 else:
-    # In production, allow specific origins
     CORS_ALLOWED_ORIGINS = [
         'https://fluentoai.vercel.app',
         'https://fluento-fm9vy9bv6-riyas-projects-602fe862.vercel.app',
         'https://fluento-taupe.vercel.app',
     ]
-    
-    # Allow all Vercel preview deployments via regex
+
+    # Allow ALL Vercel preview deployments
     CORS_ALLOWED_ORIGIN_REGEXES = [
-        r"^https://*\.vercel\.app$",
+        r"^https:\/\/.*\.vercel\.app$",
     ]
 
 CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -172,6 +176,7 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
 CORS_EXPOSE_HEADERS = [
     'content-type',
     'x-csrftoken',
