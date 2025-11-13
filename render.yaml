@@ -76,3 +76,4 @@ services:
         sync: false
       - key: ASSEMBLYAI_CALLBACK_URL
         value: 'https://fluento-ai-api.onrender.com/api/assemblyai_callback/'
+        
