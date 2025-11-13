@@ -162,7 +162,7 @@ out/
 
 # Gatsby
 .cache/
-public/
+
 
 # Vuepress
 .vuepress/dist
