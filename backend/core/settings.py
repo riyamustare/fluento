@@ -150,14 +150,14 @@ if DEBUG:
 else:
     # In production, allow specific origins
     CORS_ALLOWED_ORIGINS = [
+        'https://fluentoai.vercel.app',
+        'https://fluento-fm9vy9bv6-riyas-projects-602fe862.vercel.app',
         'https://fluento-taupe.vercel.app',
-        'https://fluento-c6mb64or2-riyas-projects-602fe862.vercel.app',
-        'https://fluento.vercel.app',
     ]
     
     # Allow all Vercel preview deployments via regex
     CORS_ALLOWED_ORIGIN_REGEXES = [
-        r"^https://fluento.*\.vercel\.app$",
+        r"^https://*\.vercel\.app$",
     ]
 
 CORS_ALLOW_CREDENTIALS = True
