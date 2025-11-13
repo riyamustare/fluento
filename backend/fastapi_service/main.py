@@ -48,15 +48,18 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://fluentoai.vercel.app",
         "https://fluento-taupe.vercel.app",
+        "https://fluento-cgbbp9uvs-riyas-projects-602fe862.vercel.app",
         "https://fluento-c6mb64or2-riyas-projects-602fe862.vercel.app",
+        "https://fluento-fm9vy9bv6-riyas-projects-602fe862.vercel.app",
         "http://localhost:5173",
         "http://localhost:3000",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    allow_origin_regex=r"https://fluento.*\.vercel\.app",
+    allow_origin_regex=r"^https://fluento.*\.vercel\.app$",
 )
 
 
