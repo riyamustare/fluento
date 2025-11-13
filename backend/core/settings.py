@@ -154,7 +154,7 @@ if DEBUG:
 else:
     CORS_ALLOWED_ORIGINS = [
         'https://fluentoai.vercel.app',
-        'https://fluento-fm9vy9bv6-riyas-projects-602fe862.vercel.app',
+        'https://fluento-cgbbp9uvs-riyas-projects-602fe862.vercel.app',
         'https://fluento-taupe.vercel.app',
     ]
 

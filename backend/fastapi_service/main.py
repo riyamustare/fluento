@@ -104,7 +104,7 @@ async def transcribe_with_assemblyai(file_bytes: bytes) -> Optional[str]:
         'content-type': 'application/json'
     }
 
-    async with httpx.AsyncClient(timeout=60) as client:
+    async with httpx.AsyncClient(timeout=120) as client:
         # Upload file to AssemblyAI (upload endpoint)
         upload_url = 'https://api.assemblyai.com/v2/upload'
         try:
@@ -115,13 +115,9 @@ async def transcribe_with_assemblyai(file_bytes: bytes) -> Optional[str]:
             audio_url = upload_json.get('upload_url') or upload_json.get('url')
             print(f"[TRANSCRIBE] Upload successful, audio URL: {audio_url[:50]}...")
 
-            # Start transcription request
-            print(f"[TRANSCRIBE] Starting transcription job (webhook-enabled)...")
-            # Request AssemblyAI to process and callback to our webhook
-            callback_url = os.environ.get('ASSEMBLYAI_CALLBACK_URL')
+            # Start transcription request (WITHOUT webhook - use polling instead)
+            print(f"[TRANSCRIBE] Starting transcription job (polling mode)...")
             body = {'audio_url': audio_url}
-            if callback_url:
-                body['webhook_url'] = callback_url
 
             transcript_req = await client.post(
                 'https://api.assemblyai.com/v2/transcript',
@@ -133,30 +129,30 @@ async def transcribe_with_assemblyai(file_bytes: bytes) -> Optional[str]:
             transcript_id = job.get('id')
             print(f"[TRANSCRIBE] Job started with ID: {transcript_id}")
 
-            # If webhook is configured, return the id and wait for callback flow
-            if callback_url:
-                print('[TRANSCRIBE] Webhook configured, returning transient id')
-                return f'__webhook_pending__:{transcript_id}'
-
-            # Fallback to polling if no webhook configured
+            # Use polling - NO WEBHOOK
             polling_url = f'https://api.assemblyai.com/v2/transcript/{transcript_id}'
-            for attempt in range(60):
+            max_attempts = 120  # 2 minutes max wait
+            for attempt in range(max_attempts):
                 status_resp = await client.get(polling_url, headers={'authorization': ASSEMBLYAI_API_KEY})
                 status_resp.raise_for_status()
                 data = status_resp.json()
                 status = data.get('status')
-                print(f"[TRANSCRIBE] Poll attempt {attempt+1}: status={status}")
+                print(f"[TRANSCRIBE] Poll attempt {attempt+1}/{max_attempts}: status={status}")
                 
                 if status == 'completed':
                     transcript = data.get('text')
                     print(f"[TRANSCRIBE] Transcription complete: {transcript[:100]}...")
                     return transcript
                 if status == 'error':
-                    print(f"[TRANSCRIBE] Transcription error: {data.get('error')}")
+                    error_msg = data.get('error')
+                    print(f"[TRANSCRIBE] Transcription error: {error_msg}")
                     return None
-                await asyncio.sleep(1)
+                
+                # Wait 1 second before next poll (exponential backoff after 30 attempts)
+                wait_time = 1 if attempt < 30 else 2
+                await asyncio.sleep(wait_time)
             
-            print(f"[TRANSCRIBE] Timeout after 60 seconds")
+            print(f"[TRANSCRIBE] Timeout after {max_attempts} attempts")
             return None
             
         except Exception as e:
@@ -382,51 +378,23 @@ async def analyze_speech(audio: UploadFile = File(...), topic: str = Form(...)):
         if not content:
             return JSONResponse({'detail': 'No audio file received'}, status_code=400)
         
+        print(f"[ANALYZE_SPEECH] Processing audio, topic: {topic}")
         transcript = await transcribe_with_assemblyai(content)
+        
         if not transcript:
+            print("[ANALYZE_SPEECH] Transcription failed")
             return JSONResponse(
-                {'detail': 'Transcription failed. Please check AssemblyAI API key.'}, 
+                {'detail': 'Transcription failed. Please check AssemblyAI API key and try again.'}, 
                 status_code=500
             )
         
-        # Handle webhook pending case - wait for the transcript to be available
-        if isinstance(transcript, str) and transcript.startswith('__webhook_pending__:'):
-            _, transcript_id = transcript.split(':', 1)
-            print(f"[ANALYZE_SPEECH] Webhook pending, waiting for transcript {transcript_id}")
-            from redis import Redis
-            redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-            redis_conn = Redis.from_url(redis_url)
-            
-            # Wait up to 120 seconds for webhook to provide the transcript
-            waited = 0
-            final_transcript = None
-            while waited < 120:
-                key = f'assemblyai:result:{transcript_id}'
-                raw = redis_conn.get(key)
-                if raw:
-                    try:
-                        payload = json.loads(raw)
-                        final_transcript = payload.get('text')
-                        if final_transcript:
-                            print(f"[ANALYZE_SPEECH] Transcript received from webhook: {final_transcript[:100]}...")
-                            break
-                    except Exception as e:
-                        print(f"[ANALYZE_SPEECH] Error parsing webhook result: {e}")
-                        break
-                await asyncio.sleep(1)
-                waited += 1
-            
-            if not final_transcript:
-                return JSONResponse(
-                    {'detail': 'Transcription timeout. Please try again.'}, 
-                    status_code=500
-                )
-            transcript = final_transcript
-
+        print(f"[ANALYZE_SPEECH] Got transcript: {transcript[:100]}...")
         analysis = await analyze_with_gemini(transcript, topic, mode='speak')
         return JSONResponse(analysis)
     except Exception as e:
         print(f"Error in analyze_speech: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JSONResponse(
             {'detail': f'Error processing audio: {str(e)}'}, 
             status_code=500
@@ -440,52 +408,24 @@ async def analyze_reading(audio: UploadFile = File(...), topic: str = Form(...))
         if not content:
             return JSONResponse({'detail': 'No audio file received'}, status_code=400)
         
+        print(f"[ANALYZE_READING] Processing audio, topic: {topic}")
         transcript = await transcribe_with_assemblyai(content)
+        
         if not transcript:
+            print("[ANALYZE_READING] Transcription failed")
             return JSONResponse(
-                {'detail': 'Transcription failed. Please check AssemblyAI API key.'}, 
+                {'detail': 'Transcription failed. Please check AssemblyAI API key and try again.'}, 
                 status_code=500
             )
-        
-        # Handle webhook pending case - wait for the transcript to be available
-        if isinstance(transcript, str) and transcript.startswith('__webhook_pending__:'):
-            _, transcript_id = transcript.split(':', 1)
-            print(f"[ANALYZE_READING] Webhook pending, waiting for transcript {transcript_id}")
-            from redis import Redis
-            redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-            redis_conn = Redis.from_url(redis_url)
-            
-            # Wait up to 120 seconds for webhook to provide the transcript
-            waited = 0
-            final_transcript = None
-            while waited < 120:
-                key = f'assemblyai:result:{transcript_id}'
-                raw = redis_conn.get(key)
-                if raw:
-                    try:
-                        payload = json.loads(raw)
-                        final_transcript = payload.get('text')
-                        if final_transcript:
-                            print(f"[ANALYZE_READING] Transcript received from webhook: {final_transcript[:100]}...")
-                            break
-                    except Exception as e:
-                        print(f"[ANALYZE_READING] Error parsing webhook result: {e}")
-                        break
-                await asyncio.sleep(1)
-                waited += 1
-            
-            if not final_transcript:
-                return JSONResponse(
-                    {'detail': 'Transcription timeout. Please try again.'}, 
-                    status_code=500
-                )
-            transcript = final_transcript
 
+        print(f"[ANALYZE_READING] Got transcript: {transcript[:100]}...")
         analysis = await analyze_with_gemini(transcript, topic, mode='read')
         # Emphasize pronunciation / tone in feedback (already in Gemini prompt)
         return JSONResponse(analysis)
     except Exception as e:
         print(f"Error in analyze_reading: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JSONResponse(
             {'detail': f'Error processing audio: {str(e)}'}, 
             status_code=500
