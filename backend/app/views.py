@@ -5,7 +5,14 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import CustomUser, Level, Feedback
 from .serializers import UserSerializer, SignupSerializer, LevelSerializer, FeedbackSerializer
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health_check(request):
+    """Health check endpoint for Render"""
+    return Response({'status': 'healthy', 'service': 'django-backend'})
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)

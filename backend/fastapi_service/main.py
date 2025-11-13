@@ -44,14 +44,38 @@ except ImportError:
 
 app = FastAPI()
 
-# Add CORS middleware
+# Add CORS middleware - Allow Vercel domains
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
+    allow_origins=[
+        "https://fluento-taupe.vercel.app",
+        "https://fluento-c6mb64or2-riyas-projects-602fe862.vercel.app",
+        "http://localhost:5173",
+        "http://localhost:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_origin_regex=r"https://fluento.*\.vercel\.app",
 )
+
+
+# Health check endpoints
+@app.get('/health')
+def health_check():
+    """Health check endpoint for Render"""
+    return {
+        'status': 'healthy',
+        'service': 'fastapi-ai-api',
+        'assemblyai_configured': bool(ASSEMBLYAI_API_KEY),
+        'gemini_configured': bool(GEMINI_API_KEY)
+    }
+
+
+@app.get('/')
+def root():
+    """Root endpoint"""
+    return {'message': 'Fluento AI API', 'status': 'running'}
 
 
 async def transcribe_with_assemblyai(file_bytes: bytes) -> Optional[str]:

@@ -4,23 +4,27 @@ from datetime import timedelta
 from decouple import config
 import dj_database_url
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# -------------------------------------------------------------------
+# BASE SETTINGS
+# -------------------------------------------------------------------
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY - read sensitive settings from environment
+# SECURITY
 SECRET_KEY = config('DJANGO_SECRET_KEY', default=os.environ.get('SECRET_KEY', 'dev-secret-key'))
-
-# Default to False in production unless explicitly enabled
 DEBUG = config('DJANGO_DEBUG', default='False') == 'True'
 
-# Read allowed hosts from env var (comma separated)
+# Allowed Hosts
 _allowed = config('DJANGO_ALLOWED_HOSTS', default='')
 if _allowed:
     ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()]
 else:
-    ALLOWED_HOSTS = ['*']
+    ALLOWED_HOSTS = ['*']  # Safe for dev; override in production
 
-# Application definition
+# -------------------------------------------------------------------
+# APPLICATIONS
+# -------------------------------------------------------------------
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -28,8 +32,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Third-party
     'rest_framework',
     'corsheaders',
+
+    # Local apps
     'app',
 ]
 
@@ -46,6 +54,10 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'core.urls'
+
+# -------------------------------------------------------------------
+# TEMPLATES
+# -------------------------------------------------------------------
 
 TEMPLATES = [
     {
@@ -65,7 +77,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# Database
+# -------------------------------------------------------------------
+# DATABASE CONFIG
+# -------------------------------------------------------------------
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -73,36 +88,35 @@ DATABASES = {
     }
 }
 
-# If a DATABASE_URL is present (Render/postgres), use dj_database_url to configure
+# Override database if DATABASE_URL exists (Render / Postgres)
 DATABASE_URL = os.environ.get('DATABASE_URL') or config('DATABASE_URL', default='')
 if DATABASE_URL:
-    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
+    DATABASES['default'] = dj_database_url.parse(
+        DATABASE_URL, conn_max_age=600, ssl_require=True
+    )
 
-# Use persistent DB connections for performance under load
+# Persistent DB connections
 CONN_MAX_AGE = int(config('CONN_MAX_AGE', default='600'))
 for db in DATABASES.values():
     db.setdefault('CONN_MAX_AGE', CONN_MAX_AGE)
 
-# Custom user model
-AUTH_USER_MODEL = 'app.CustomUser'
+# -------------------------------------------------------------------
+# AUTH & USER MODEL
+# -------------------------------------------------------------------
 
-# Default primary key field type (Django 3.2+)
+AUTH_USER_MODEL = 'app.CustomUser'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+
+# -------------------------------------------------------------------
+# INTERNATIONALIZATION
+# -------------------------------------------------------------------
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -110,47 +124,60 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATIC_URL = '/static/'
+# -------------------------------------------------------------------
+# STATIC FILES (Whitenoise)
+# -------------------------------------------------------------------
 
-# Whitenoise static files (production)
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# When behind a proxy (Render), honor X-Forwarded-Proto for secure redirects
+# -------------------------------------------------------------------
+# SECURITY HEADERS FOR RENDER
+# -------------------------------------------------------------------
+
+# Honor X-Forwarded-Proto when behind proxy
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# CORS Settings - Improved Security
-IS_PRODUCTION = bool(DATABASE_URL) or config('DJANGO_ENV', default='development') == 'production'
+# -------------------------------------------------------------------
+# CORS CONFIGURATION (UPDATED & SAFE)
+# -------------------------------------------------------------------
 
-if IS_PRODUCTION:
-    # Production: Only allow specific origins
-    CORS_ALLOWED_ORIGINS = config(
-        'CORS_ALLOWED_ORIGINS',
-        default='https://fluento.vercel.app'
-    ).split(',')
-    CORS_ALLOW_CREDENTIALS = True
-    
-    # Production security settings
-    SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default='True') == 'True'
-    CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default='True') == 'True'
-    SECURE_HSTS_SECONDS = int(config('SECURE_HSTS_SECONDS', default='31536000'))
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default='True') == 'True'
-    SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default='True') == 'True'
-    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default='True') == 'True'
-    X_FRAME_OPTIONS = 'DENY'
-else:
-    # Development: Allow all origins
+# Safe CORS rules (development vs production)
+
+if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ALLOW_CREDENTIALS = True
+else:
+    # Get CORS origins from environment
+    cors_origins_str = config('CORS_ALLOWED_ORIGINS', default='')
+    if cors_origins_str:
+        CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_str.split(',') if origin.strip()]
+    else:
+        # Default to allowing Vercel deployment patterns
+        CORS_ALLOWED_ORIGINS = []
     
-    # Development settings - disable HTTPS requirements
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
-    SECURE_HSTS_SECONDS = 0
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
-    SECURE_HSTS_PRELOAD = False
-    SECURE_SSL_REDIRECT = False
-    X_FRAME_OPTIONS = 'SAMEORIGIN'
+    # Always allow Vercel preview deployments
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^https://fluento.*\.vercel\.app$",
+        r"^https://.*\.onrender\.com$",
+    ]
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# -------------------------------------------------------------------
+# REST FRAMEWORK / JWT
+# -------------------------------------------------------------------
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
