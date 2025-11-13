@@ -6,74 +6,133 @@ class Command(BaseCommand):
     help = 'Create initial 21 levels with example topics and increasing difficulty'
 
     def handle(self, *args, **options):
-        # Define 21 diverse topics with progressively increasing difficulty
-        topics = [
-            'Introduce yourself',
-            'Describe your favorite hobby',
-            'Talk about your last vacation',
-            'Explain your daily routine',
-            'Discuss your career goals',
-            'Describe a meaningful childhood memory',
-            'Explain a challenging problem you solved',
-            'Talk about a book or movie that influenced you',
-            'Describe your ideal weekend',
-            'Explain a cultural tradition from your country',
-            'Discuss a recent technology trend',
-            'Describe a project you led',
-            'Give advice to your younger self',
-            'Explain a controversial opinion and defend it',
-            'Describe a complex process you understand well',
-            'Tell a story about an unexpected failure and lesson',
-            'Compare two cities or countries you know',
-            'Describe your approach to learning new skills',
-            'Explain how you handle stress and deadlines',
-            'Discuss ethical considerations in technology',
-            'Outline a five-year personal and professional plan',
+        # Define 21 diverse topics with sample answers
+        levels_data = [
+            {
+                'topic': 'Introduce yourself',
+                'eng': "Hello, my name is Emma and I'm from London. I'm a graphic designer with five years of experience in digital marketing. I grew up in a creative family, which inspired me to pursue design. In my free time, I love traveling and photography. I speak English, French, and a bit of German. My goal is to improve my professional language skills to work with international clients.",
+                'ger': "Hallo, mein Name ist Emma und ich komme aus London. Ich bin Grafikdesignerin mit fünf Jahren Erfahrung im digitalen Marketing. Ich bin in einer kreativen Familie aufgewachsen, was mich inspirierte, Design zu verfolgen. In meiner Freizeit liebe ich Reisen und Fotografie. Ich spreche Englisch, Französisch und ein bisschen Deutsch. Mein Ziel ist es, meine beruflichen Sprachkenntnisse zu verbessern, um mit internationalen Kunden zu arbeiten.",
+            },
+            {
+                'topic': 'Describe your favorite hobby',
+                'eng': "My favorite hobby is hiking. I started hiking about three years ago when a friend invited me to climb a mountain. Now I go hiking almost every weekend. I love being in nature and enjoying the fresh air. There's something peaceful about walking through forests and mountains. My favorite trail is the one near my city, which takes about four hours to complete. At the top, there's a beautiful view of the valley below. Hiking keeps me physically fit and mentally refreshed.",
+                'ger': "Mein Lieblingshobby ist Wandern. Ich bin vor etwa drei Jahren mit dem Wandern angefangen, als ein Freund mich einlud, einen Berg zu erklimmen. Jetzt wandere ich fast jeden Wochenende. Ich liebe es, in der Natur zu sein und die frische Luft zu genießen. Es gibt etwas Friedliches beim Durchwandern von Wäldern und Bergen. Mein Lieblingsweg ist der Weg in der Nähe meiner Stadt, der etwa vier Stunden dauert. Oben gibt es einen wunderschönen Blick auf das Tal unten. Wandern hält mich körperlich fit und geistig erfrischt.",
+            },
+            {
+                'topic': 'Talk about your last vacation',
+                'eng': "Last summer, I took a trip to Italy with my family. We spent two weeks there visiting Rome, Florence, and Venice. The architecture was absolutely stunning. In Rome, we saw the Colosseum and the Vatican. I was amazed by the historical sites and the art galleries. We ate delicious Italian food every day, especially pasta and gelato. One of my favorite moments was taking a gondola ride in Venice at sunset. It was romantic and unforgettable. I would definitely recommend Italy to anyone looking for a cultural vacation.",
+                'ger': "Letzten Sommer machte ich eine Reise nach Italien mit meiner Familie. Wir verbrachten dort zwei Wochen und besuchten Rom, Florenz und Venedig. Die Architektur war absolut atemberaubend. In Rom sahen wir das Kolosseum und den Vatikan. Ich war erstaunt über die historischen Stätten und die Kunstgalerien. Wir aßen jeden Tag köstliches italienisches Essen, besonders Pasta und Gelato. Einer meiner Lieblingsmomente war eine Gondelfahrt in Venedig bei Sonnenuntergang. Es war romantisch und unvergesslich. Ich würde Italien jedem empfehlen, der einen Kultururlaub sucht.",
+            },
+            {
+                'topic': 'Explain your daily routine',
+                'eng': "My daily routine starts at six-thirty in the morning. I wake up, drink a coffee, and check my emails. Then I go to the gym for about an hour to exercise. After that, I take a shower and have breakfast. I arrive at work around nine o'clock. I spend most of the day in meetings and working on projects with my team. I take a lunch break at noon. In the evening, I usually cook dinner and spend time with my family. Before bed, I read a book for thirty minutes. I try to sleep by eleven o'clock to get enough rest for the next day.",
+                'ger': "Mein tägliches Leben beginnt um halb sieben morgens. Ich wache auf, trinke einen Kaffee und überprüfe meine E-Mails. Dann gehe ich etwa eine Stunde ins Fitnessstudio zum Trainieren. Danach dusche ich und frühstücke. Ich komme gegen neun Uhr zur Arbeit. Ich verbringe den größten Teil des Tages in Besprechungen und arbeite an Projekten mit meinem Team. Ich mache zur Mittagszeit Mittagspause. Am Abend koche ich normalerweise Abendessen und verbringe Zeit mit meiner Familie. Vor dem Schlafengehen lese ich dreißig Minuten ein Buch. Ich versuche, um elf Uhr schlafen zu gehen, um genug Ruhe für den nächsten Tag zu bekommen.",
+            },
+            {
+                'topic': 'Discuss your career goals',
+                'eng': "My career goal is to become a project manager within the next three years. I'm currently working as a team lead, and I want to advance further in my company. I'm taking management courses and improving my leadership skills. I want to lead larger teams and manage bigger projects. Additionally, I hope to start my own business someday. I want to create a company that helps small businesses grow. I believe that with hard work and dedication, I can achieve these goals. I'm also planning to get an MBA to strengthen my qualifications.",
+                'ger': "Mein Berufsziel ist es, in den nächsten drei Jahren Projektmanager zu werden. Ich arbeite derzeit als Teamleiter und möchte in meinem Unternehmen vorankommen. Ich nehme Managementkurse und verbessere meine Führungsqualifikationen. Ich möchte größere Teams leiten und größere Projekte verwalten. Darüber hinaus hoffe ich, eines Tages mein eigenes Unternehmen zu gründen. Ich möchte ein Unternehmen schaffen, das kleinen Unternehmen beim Wachstum hilft. Ich glaube, dass ich diese Ziele mit harter Arbeit und Engagement erreichen kann. Ich plane auch, einen MBA zu machen, um meine Qualifikationen zu stärken.",
+            },
+            {
+                'topic': 'Describe a meaningful childhood memory',
+                'eng': "One of my most meaningful childhood memories is learning to cook with my grandmother. Every weekend, she would teach me how to prepare traditional family recipes. We spent hours in the kitchen together, and she shared stories about our family history. She taught me not just how to cook, but also about patience, love, and tradition. Her kitchen was where I learned the importance of family and togetherness. Unfortunately, she passed away five years ago, but I still use her recipes and remember her wisdom. Cooking has become my way of keeping her memory alive and passing our traditions to the next generation.",
+                'ger': "Eine meiner bedeutungsvollsten Kindheitserinnerungen ist das Kochen lernen mit meiner Großmutter. Jeden Wochenende würde sie mir beibringen, wie man traditionelle Familienrezepte zubereitet. Wir verbrachten Stunden zusammen in der Küche, und sie erzählte Geschichten über unsere Familiengeschichte. Sie lehrte mich nicht nur, wie man kocht, sondern auch über Geduld, Liebe und Tradition. Ihre Küche war der Ort, wo ich die Bedeutung von Familie und Zusammengehörigkeit lernte. Leider starb sie vor fünf Jahren, aber ich benutze immer noch ihre Rezepte und erinnere mich an ihre Weisheit. Kochen ist für mich eine Möglichkeit geworden, ihre Erinnerung lebendig zu halten.",
+            },
+            {
+                'topic': 'Explain a challenging problem you solved',
+                'eng': "Last year, our company faced a significant problem with our software system crashing frequently, which was affecting our clients. As the lead developer, I had to find a solution quickly. I analyzed the code and discovered that the issue was related to poor database indexing and memory leaks. I created a plan to refactor the system and optimize the database queries. With my team's help, we worked overtime for two weeks to implement the solution. After deploying the updates, the system ran smoothly without any crashes. This experience taught me the importance of thorough code review and the value of teamwork in solving complex problems.",
+                'ger': "Letztes Jahr hatte unser Unternehmen ein großes Problem mit unserem Softwaresystem, das häufig abstürzte und unsere Kunden beeinträchtigte. Als Lead-Entwickler musste ich schnell eine Lösung finden. Ich analysierte den Code und entdeckte, dass das Problem mit schlechtem Datenbankindexing und Speicherlecks zusammenhängt. Ich erstellte einen Plan, das System umzugestalten und die Datenbankabfragen zu optimieren. Mit Hilfe meines Teams arbeiteten wir zwei Wochen lang Überstunden, um die Lösung umzusetzen. Nach der Bereitstellung der Updates lief das System reibungslos ohne Abstürze. Diese Erfahrung lehrte mich die Bedeutung gründlicher Code-Überprüfung.",
+            },
+            {
+                'topic': 'Talk about a book or movie that influenced you',
+                'eng': "The movie 'The Pursuit of Happyness' has greatly influenced me. It tells the story of a man who faces incredible hardship but never gives up on his dreams. The main character, Chris Gardner, loses his house and becomes homeless while raising his young son. Despite these challenges, he keeps pursuing his career in finance and eventually succeeds. What moved me most was his determination and resilience. The movie taught me that circumstances don't define our future; our choices and persistence do. Whenever I face difficulties, I remember this movie and it motivates me to keep going. It's a powerful reminder that dreams are achievable if we're willing to work hard for them.",
+                'ger': "Der Film 'The Pursuit of Happyness' hat mich stark beeinflusst. Er erzählt die Geschichte eines Mannes, der unglaubliche Schwierigkeiten faces, aber nie seine Träume aufgibt. Die Hauptfigur, Chris Gardner, verliert sein Haus und wird obdachlos, während er seinen jungen Sohn aufzieht. Trotz dieser Herausforderungen verfolgt er weiterhin seine Karriere im Finanzwesen und hat schließlich Erfolg. Was mich am meisten berührte, war seine Entschlossenheit und Widerstandsfähigkeit. Der Film lehrte mich, dass Umstände unsere Zukunft nicht definieren; unsere Entscheidungen und Ausdauer tun es. Wann immer ich Schwierigkeiten face, erinnere ich mich an diesen Film und es motiviert mich weiterzumachen.",
+            },
+            {
+                'topic': 'Describe your ideal weekend',
+                'eng': "My ideal weekend would be a perfect balance of relaxation and adventure. I would start Saturday morning by sleeping in and having a leisurely breakfast with my family. In the afternoon, I'd go hiking or play sports to stay active. In the evening, I'd have dinner with friends at my favorite restaurant and we'd have meaningful conversations. On Sunday, I'd spend time reading my favorite book in a cozy cafe. Then I'd prepare a home-cooked meal and invite close friends over for a gathering. We'd watch a movie together and enjoy each other's company. Before the weekend ends, I'd reflect on the week and plan for the coming week. This balance between social time, physical activity, and rest would make my weekend truly ideal.",
+                'ger': "Mein ideales Wochenende würde eine perfekte Balance zwischen Entspannung und Abenteuer sein. Ich würde Samstagmorgen ausschlafen und gemütlich mit meiner Familie frühstücken. Am Nachmittag würde ich wandern oder Sport treiben, um aktiv zu bleiben. Am Abend würde ich mit Freunden in meinem Lieblingsrestaurant zu Abend essen und bedeutungsvolle Gespräche führen. Am Sonntag würde ich Zeit damit verbringen, mein Lieblingsbuch in einem gemütlichen Café zu lesen. Dann würde ich eine selbstgekochte Mahlzeit zubereiten und enge Freunde einladen. Wir würden zusammen einen Film schauen und die Gesellschaft genießen. Bevor das Wochenende zu Ende geht, würde ich auf die Woche reflektieren.",
+            },
+            {
+                'topic': 'Explain a cultural tradition from your country',
+                'eng': "One important cultural tradition from my country is the celebration of Christmas. Although it's a religious holiday, it has become a major cultural event for everyone. Families gather together to decorate their homes with lights and ornaments. We prepare traditional meals and exchange gifts. The streets are decorated with festive decorations, and people spread joy and goodwill. Many communities hold public celebrations and concerts. It's a time when people emphasize family values, generosity, and kindness. Despite our busy lives, Christmas brings everyone together and reminds us of what truly matters. It's not just about material gifts; it's about spending quality time with loved ones and appreciating each other.",
+                'ger': "Eine wichtige kulturelle Tradition aus meinem Land ist die Feier von Weihnachten. Obwohl es ein religiöser Feiertag ist, ist er zu einem großen kulturellen Ereignis für alle geworden. Familien versammeln sich, um ihre Häuser mit Lichtern und Ornamenten zu dekorieren. Wir bereiten traditionelle Mahlzeiten vor und tauschen Geschenke aus. Die Straßen sind mit festlichen Dekorationen geschmückt, und Menschen verbreiten Freude und Wohlwollen. Viele Gemeinden halten öffentliche Feiern und Konzerte ab. Es ist eine Zeit, in der Menschen Familienwerte, Großzügigkeit und Freundlichkeit betonen.",
+            },
+            {
+                'topic': 'Discuss a recent technology trend',
+                'eng': "Artificial intelligence is probably the most significant technology trend right now. AI is changing how we work, communicate, and solve problems. In my field, we're using AI to automate repetitive tasks and improve customer service through chatbots. AI is also being used in healthcare to diagnose diseases more accurately. However, with these advancements come concerns about privacy and job displacement. I believe that as AI continues to develop, we need to ensure it's used ethically and responsibly. The key is to view AI as a tool that enhances human capabilities rather than replaces human workers. Understanding AI is becoming essential for professionals in almost every industry.",
+                'ger': "Künstliche Intelligenz ist wahrscheinlich der bedeutendste Technologie-Trend im Moment. KI verändert, wie wir arbeiten, kommunizieren und Probleme lösen. In meinem Bereich nutzen wir KI, um wiederholte Aufgaben zu automatisieren und den Kundenservice durch Chatbots zu verbessern. KI wird auch im Gesundheitswesen eingesetzt, um Krankheiten genauer zu diagnostizieren. Mit diesen Fortschritten kommen jedoch Bedenken hinsichtlich Datenschutz und Jobverlust. Ich glaube, dass wir, wenn KI sich weiterentwickelt, sicherstellen müssen, dass sie ethisch und verantwortungsvoll eingesetzt wird. Der Schlüssel ist, KI als ein Werkzeug zu betrachten, das menschliche Fähigkeiten verbessert.",
+            },
+            {
+                'topic': 'Describe a project you led',
+                'eng': "Two years ago, I led a project to redesign our company's website. It was a complex project involving designers, developers, and marketing specialists. My role was to coordinate between different teams, manage the timeline, and ensure we stayed within budget. Initially, we had some technical challenges and disagreements about the design direction. However, I organized regular meetings to discuss concerns and find compromises. We spent three months planning and six months implementing. The final result was a modern, user-friendly website that increased our online traffic by forty percent. This project taught me valuable leadership skills and the importance of clear communication and collaboration.",
+                'ger': "Vor zwei Jahren leitete ich ein Projekt zur Umgestaltung der Website meines Unternehmens. Es war ein komplexes Projekt mit Designern, Entwicklern und Marketingspezialisten. Meine Rolle war es, zwischen verschiedenen Teams zu koordinieren, den Zeitplan zu verwalten und sicherzustellen, dass wir im Budget blieben. Anfangs hatten wir einige technische Herausforderungen und Meinungsverschiedenheiten über die Designrichtung. Ich organisierte jedoch regelmäßige Meetings, um Bedenken zu diskutieren und Kompromisse zu finden. Wir verbrachten drei Monate mit der Planung und sechs Monate mit der Implementierung. Das Endergebnis war eine moderne, benutzerfreundliche Website.",
+            },
+            {
+                'topic': 'Give advice to your younger self',
+                'eng': "If I could talk to my younger self, I would say several things. First, I would tell myself not to worry so much about what others think. The opinions that truly matter come from people who love and care about you. Second, I would encourage myself to take more risks and try new things. Some of my best experiences came from stepping outside my comfort zone. Third, I would remind myself that failure is not the end; it's an opportunity to learn and grow. Many of my current successes came after facing failures. Finally, I would advise myself to cherish time with family and friends. Material success is important, but relationships are truly the foundation of happiness. Life moves quickly, and it's important to appreciate the present moment.",
+                'ger': "Wenn ich mit meinem jüngeren Ich sprechen könnte, würde ich mehrere Dinge sagen. Erstens würde ich mir selbst sagen, nicht so viel darüber nachzudenken, was andere denken. Die Meinungen, die wirklich zählen, kommen von Menschen, die dich lieben und kümmern. Zweitens würde ich mich selbst ermutigen, mehr Risiken einzugehen und neue Dinge zu versuchen. Einige meiner besten Erfahrungen kamen, wenn ich meine Komfortzone verlasse. Drittens würde ich mir selbst ins Gedächtnis rufen, dass Scheitern nicht das Ende ist; es ist eine Gelegenheit zu lernen und zu wachsen.",
+            },
+            {
+                'topic': 'Explain a controversial opinion and defend it',
+                'eng': "I believe that remote work should be a permanent option for more companies. Many people think that working in an office is more productive, but I disagree. Remote work has several advantages. First, it reduces commuting time and increases work-life balance. Employees can spend more time with their families. Second, companies can hire talents from anywhere in the world, not just locally. Third, studies show that many people are actually more productive when working from home because there are fewer distractions. Of course, some jobs require physical presence, like manufacturing or healthcare. However, for knowledge-based jobs like programming and design, remote work is very effective. The future of work should be flexible and adaptable to individual needs.",
+                'ger': "Ich glaube, dass Fernarbeit eine permanente Option für mehr Unternehmen sein sollte. Viele Menschen denken, dass die Arbeit im Büro produktiver ist, aber ich bin anderer Meinung. Fernarbeit hat mehrere Vorteile. Erstens reduziert sie die Pendelzeit und erhöht die Work-Life-Balance. Arbeitnehmer können mehr Zeit mit ihren Familien verbringen. Zweitens können Unternehmen Talente von überall auf der Welt einstellen, nicht nur lokal. Drittens zeigen Studien, dass viele Menschen tatsächlich produktiver sind, wenn sie von zu Hause aus arbeiten.",
+            },
+            {
+                'topic': 'Describe a complex process you understand well',
+                'eng': "I'd like to explain the software development lifecycle, which I've worked with for years. It starts with planning and requirements analysis where stakeholders define what the software should do. Then comes the design phase, where architects create the system architecture and technical specifications. Next is the development phase where developers write code according to the design. This is followed by testing, where quality assurance teams check for bugs and issues. Once approved, the software goes into deployment where it's released to production. However, the process doesn't end there. There's continuous monitoring and maintenance to ensure everything runs smoothly. If issues arise, developers fix them and deploy patches. This cycle repeats regularly. Understanding this process is crucial for managing software projects successfully.",
+                'ger': "Ich möchte den Softwareentwicklungslebenszyklus erklären, mit dem ich seit Jahren arbeite. Es beginnt mit Planung und Anforderungsanalyse, wo Stakeholder definieren, was die Software tun soll. Dann kommt die Designphase, in der Architekten die Systemarchitektur und technische Spezifikationen erstellen. Als Nächstes kommt die Entwicklungsphase, in der Entwickler Code gemäß dem Design schreiben. Darauf folgt das Testen, bei dem Qualitätssicherungsteams auf Fehler und Probleme prüfen. Nach Genehmigung wird die Software in der Produktionsumgebung bereitgestellt.",
+            },
+            {
+                'topic': 'Tell a story about an unexpected failure and lesson',
+                'eng': "A few years ago, I launched a startup with a business partner. We were confident and excited about our product. However, we didn't conduct thorough market research. After six months, we realized that there wasn't enough demand for our product. We had spent most of our savings and had to shut down the business. It was heartbreaking and embarrassing. But this failure taught me invaluable lessons. I learned the importance of validating your business idea before investing heavily. I learned to listen to customer feedback early and often. Most importantly, I learned resilience and the ability to bounce back from disappointment. Today, these lessons help me make better business decisions. I now always start with market research and talk to potential customers before building anything.",
+                'ger': "Vor einigen Jahren startete ich ein Startup mit einem Geschäftspartner. Wir waren zuversichtlich und begeistert von unserem Produkt. Allerdings führten wir keine gründliche Marktforschung durch. Nach sechs Monaten realisierten wir, dass es nicht genug Nachfrage für unser Produkt gab. Wir hatten die meisten unserer Ersparnisse ausgegeben und mussten das Geschäft schließen. Es war herzzerreißend und peinlich. Aber dieses Scheitern lehrte mich unschätzbare Lektionen. Ich lernte die Bedeutung, Ihre Geschäftsidee zu validieren.",
+            },
+            {
+                'topic': 'Compare two cities or countries you know',
+                'eng': "I've spent time in both London and Barcelona, and they're both wonderful cities with distinct characteristics. London is a huge, fast-paced metropolis with world-class museums and historical landmarks. The weather is often rainy and cold. Barcelona, on the other hand, is more relaxed and has a Mediterranean climate with beautiful beaches. The architecture is unique, influenced by Gaudi's creative designs. London has better public transportation and more job opportunities in finance and tech. Barcelona offers a better quality of life with a slower pace and more outdoor activities. Cost of living is higher in London. Both cities have vibrant cultures and amazing food scenes. If I had to choose, it would depend on my priorities. For career advancement, London is better. For lifestyle and happiness, Barcelona wins. Ideally, I'd love to divide my time between both cities.",
+                'ger': "Ich habe Zeit sowohl in London als auch in Barcelona verbracht, und beide sind wunderbare Städte mit unterschiedlichen Eigenschaften. London ist eine riesige, schnelllebige Metropole mit Weltklasse-Museen und historischen Sehenswürdigkeiten. Das Wetter ist oft regnerisch und kalt. Barcelona hingegen ist entspannter und hat ein mediterranes Klima mit schönen Stränden. Die Architektur ist einzigartig, beeinflusst von Gaudís kreativen Designs. London hat einen besseren öffentlichen Nahverkehr und mehr Karrieremöglichkeiten im Finanz- und Tech-Sektor.",
+            },
+            {
+                'topic': 'Describe your approach to learning new skills',
+                'eng': "My approach to learning new skills involves several steps. First, I identify what skill I want to learn and why. Setting a clear goal helps me stay motivated. Second, I research the best resources available - whether that's online courses, books, or mentors. I prefer a combination of theory and practice. Third, I create a learning plan with specific milestones and deadlines. This keeps me accountable. Fourth, I practice consistently. Learning a skill requires dedication and repetition. I also seek feedback from more experienced people. Fifth, I reflect on my progress regularly and adjust my approach if needed. I'm not afraid to fail during the learning process. Failures are opportunities to improve. I believe that continuous learning is essential in today's rapidly changing world. I'm always developing new skills to stay relevant and competitive.",
+                'ger': "Mein Ansatz zum Erlernen neuer Fähigkeiten umfasst mehrere Schritte. Zunächst identifiziere ich, welche Fähigkeit ich erlernen möchte und warum. Das Setzen eines klaren Ziels hilft mir, motiviert zu bleiben. Zweitens recherchiere ich die besten verfügbaren Ressourcen - ob das Online-Kurse, Bücher oder Mentoren sind. Ich bevorzuge eine Kombination aus Theorie und Praxis. Drittens erstelle ich einen Lernplan mit spezifischen Meilensteinen und Fristen.",
+            },
+            {
+                'topic': 'Explain how you handle stress and deadlines',
+                'eng': "Handling stress and deadlines is something I've learned to manage over the years. First, I prioritize tasks by importance and urgency. This helps me focus on what really matters. Second, I break down large projects into smaller, manageable tasks. This makes the workload less overwhelming. Third, I practice time management techniques like the Pomodoro method, where I work in focused intervals with short breaks. This increases productivity and reduces fatigue. Fourth, I maintain a healthy lifestyle. Regular exercise and adequate sleep help me cope with stress better. Fifth, I don't hesitate to ask for help when needed. Delegating tasks to team members not only shares the workload but also develops their skills. Finally, I practice mindfulness and meditation to calm my mind. When I feel overwhelmed, I take a few minutes to breathe and refocus. I've learned that managing stress is not about avoiding pressure, but about responding to it effectively.",
+                'ger': "Der Umgang mit Stress und Fristen ist etwas, das ich im Laufe der Jahre gelernt habe zu bewältigen. Erstens priorisiere ich Aufgaben nach Wichtigkeit und Dringlichkeit. Dies hilft mir, mich auf das wirklich Wichtige zu konzentrieren. Zweitens unterteile ich große Projekte in kleinere, überschaubare Aufgaben. Dies macht die Arbeitsbelastung weniger überwältigend. Drittens praktiziere ich Zeitmanagement-Techniken wie die Pomodoro-Methode, bei der ich in fokussierten Intervallen mit kurzen Pausen arbeite.",
+            },
+            {
+                'topic': 'Discuss ethical considerations in technology',
+                'eng': "Ethical considerations in technology are increasingly important as technology shapes more aspects of our lives. There are several key issues to consider. First is privacy - companies collect enormous amounts of user data. We need strong regulations to protect people's personal information. Second is bias in artificial intelligence. If AI systems are trained on biased data, they can make unfair decisions. Third is cybersecurity. As we store more sensitive information online, protecting it becomes crucial. Fourth is the digital divide - not everyone has equal access to technology. We should work to bridge this gap. Fifth is the responsibility of tech companies. They should consider the societal impact of their products, not just profits. Finally, there's the issue of job displacement due to automation. We need to prepare workers and society for these changes. I believe tech professionals have a responsibility to advocate for ethical practices in their field.",
+                'ger': "Ethische Überlegungen in der Technologie werden immer wichtiger, wenn Technologie mehr Aspekte unseres Lebens beeinflusst. Es gibt mehrere wichtige Punkte zu beachten. Erstens ist Datenschutz - Unternehmen sammeln enorme Mengen an Benutzerdaten. Wir brauchen starke Vorschriften zum Schutz persönlicher Informationen. Zweitens ist Voreingenommenheit in künstlicher Intelligenz. Wenn KI-Systeme mit voreingenommenen Daten trainiert werden, können sie unfaire Entscheidungen treffen.",
+            },
+            {
+                'topic': 'Outline a five-year personal and professional plan',
+                'eng': "My five-year plan involves both personal and professional growth. Professionally, I aim to be promoted to senior management within two years. I'm currently taking leadership training courses to prepare. In three years, I want to have completed an MBA, which will strengthen my qualifications. By year five, I hope to lead a team of at least twenty people and manage a significant budget. Personally, I plan to improve my language skills - I want to become fluent in German and Spanish. I also want to travel to ten new countries to broaden my perspective. In terms of health, I want to maintain regular exercise and improve my diet. I hope to start a family by year four or five. Financially, I aim to save enough for a down payment on a house. I also want to invest in my education and personal development. Throughout these five years, I'll maintain a balance between work and personal life. I'll evaluate my progress annually and adjust my plan if needed. This structured approach helps me stay focused and motivated.",
+                'ger': "Mein Fünfjahresplan umfasst sowohl berufliches als auch persönliches Wachstum. Beruflich strebe ich an, innerhalb von zwei Jahren in Senior Management befördert zu werden. Ich absolviere derzeit Führungstrainings-Kurse zur Vorbereitung. In drei Jahren möchte ich einen MBA absolviert haben, was meine Qualifikationen stärken wird. Bis Jahr fünf hoffe ich, ein Team von mindestens zwanzig Personen zu leiten. Persönlich plane ich, meine Sprachkenntnisse zu verbessern - ich möchte fließend Deutsch und Spanisch sprechen.",
+            },
         ]
 
-        for idx, topic in enumerate(topics, start=1):
-            # Increase difficulty gradually
+        for idx, data in enumerate(levels_data, start=1):
             difficulty = min(10, idx // 2 + 1)
-
-            # Build a longer English and German text template for read mode
-            eng = (
-                f"Level {idx}: {topic}. "
-                f"In this exercise, you should speak for about one minute on the topic. "
-                f"Try to include personal examples, specific details, and reflections that show depth of thought. "
-                f"For example, explain why this topic matters to you, give an anecdote, and describe any outcomes or lessons learned. "
-                f"Aim for clear sentence structure and varied vocabulary."
-            )
-
-            ger = (
-                f"Level {idx}: {topic} (Deutsch). "
-                f"In dieser Übung sollten Sie etwa eine Minute lang zum Thema sprechen. "
-                f"Versuchen Sie, persönliche Beispiele, konkrete Details und Reflexionen einzubeziehen, die Tiefe zeigen. "
-                f"Erklären Sie zum Beispiel, warum dieses Thema für Sie wichtig ist, erzählen Sie eine Anekdote und beschreiben Sie Ergebnisse oder Lektionen. "
-                f"Achten Sie auf klare Satzstruktur und abwechslungsreichen Wortschatz."
-            )
 
             level, created = Level.objects.get_or_create(
                 id=idx,
                 defaults={
-                    'topic': topic,
+                    'topic': data['topic'],
                     'difficulty': difficulty,
-                    'text': eng,
-                    'text_german': ger,
+                    'text': data['eng'],
+                    'text_german': data['ger'],
                 }
             )
 
             if created:
                 self.stdout.write(self.style.SUCCESS(f'Created level {level.id}: {level.topic}'))
             else:
-                # Update existing level with missing fields or updated templates
-                changed = False
-                if not level.text:
-                    level.text = eng
-                    changed = True
-                if not level.text_german:
-                    level.text_german = ger
-                    changed = True
-                if changed:
-                    level.save()
-                self.stdout.write(f'Level {level.id} already exists')
-
+                # Update existing level with new texts
+                level.text = data['eng']
+                level.text_german = data['ger']
+                level.save()
+                self.stdout.write(f'Updated level {level.id}: {level.topic}')
