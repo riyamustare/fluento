@@ -62,7 +62,7 @@ function LevelDescription({ level }) {
 export default function LevelsDashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { levels, userProgress, fetchLevels, fetchUserProgress, isLevelUnlocked } = useProgress();
+  const { levels, userProgress, error, fetchLevels, fetchUserProgress, isLevelUnlocked } = useProgress();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -71,7 +71,11 @@ export default function LevelsDashboard() {
         navigate('/login');
         return;
       }
-      await Promise.all([fetchLevels(), fetchUserProgress()]);
+      try {
+        await Promise.all([fetchLevels(), fetchUserProgress()]);
+      } catch (err) {
+        console.error('Failed to load data:', err);
+      }
       setLoading(false);
     };
     loadData();
@@ -88,6 +92,23 @@ export default function LevelsDashboard() {
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           <p className="mt-4 text-xl text-gray-700">Loading your levels...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || levels.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-xl text-red-600 font-semibold">Unable to load levels</p>
+          <p className="text-gray-600 mt-2">{error || 'No levels available'}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );

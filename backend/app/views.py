@@ -12,7 +12,12 @@ from rest_framework.permissions import AllowAny
 @permission_classes([AllowAny])
 def health_check(request):
     """Health check endpoint for Render"""
-    return Response({'status': 'healthy', 'service': 'django-backend'})
+    level_count = Level.objects.count()
+    return Response({
+        'status': 'healthy',
+        'service': 'django-backend',
+        'levels_in_db': level_count,
+    })
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -62,6 +67,12 @@ class LevelListView(generics.ListAPIView):
     queryset = Level.objects.all().order_by('id')
     serializer_class = LevelSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    def list(self, request, *args, **kwargs):
+        try:
+            return super().list(request, *args, **kwargs)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class LevelDetailView(generics.RetrieveAPIView):
