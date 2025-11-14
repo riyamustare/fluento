@@ -8,5 +8,6 @@ urlpatterns = [
     path('levels/<int:pk>/', views.LevelDetailView.as_view(), name='level-detail'),
     path('save_feedback/', views.SaveFeedbackView.as_view(), name='save-feedback'),
     path('user_progress/', views.UserProgressView.as_view(), name='user-progress'),
+    path('user_feedback/', views.UserFeedbackView.as_view(), name='user-feedback'),
     path('feedback/<int:level_id>/', views.FeedbackByLevelView.as_view(), name='feedback-by-level'),
 ]

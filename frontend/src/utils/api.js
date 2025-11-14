@@ -147,6 +147,11 @@ export const feedbackAPI = {
     console.log('[API] Fetching feedback for level:', levelId);
     return djangoAPI.get(`/feedback/${levelId}/`);
   },
+  getAllUserFeedback: () => {
+    console.log('[API] Fetching all user feedback');
+    // This would need a new endpoint in backend
+    return djangoAPI.get('/user_feedback/');
+  },
 };
 
 // AI Analysis endpoints (FastAPI)

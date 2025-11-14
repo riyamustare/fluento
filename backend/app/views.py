@@ -122,7 +122,7 @@ class UserProgressView(APIView):
     def get(self, request):
         user = request.user
         return Response({
-            'total_xp': user.xp or 0,
+            'xp': user.xp or 0,
             'completed_levels': user.completed_levels or [],
         })
 
@@ -134,3 +134,11 @@ class FeedbackByLevelView(generics.ListAPIView):
     def get_queryset(self):
         level_id = self.kwargs.get('level_id')
         return Feedback.objects.filter(level_id=level_id, user=self.request.user).order_by('-created_at')
+
+
+class UserFeedbackView(generics.ListAPIView):
+    serializer_class = FeedbackSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Feedback.objects.filter(user=self.request.user).order_by('-created_at')

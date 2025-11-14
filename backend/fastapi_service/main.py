@@ -205,32 +205,20 @@ async def analyze_with_gemini(transcript: str, topic: str, mode: str = 'speak') 
             print("[GEMINI] Using Google AI SDK (genai)")
             import google.generativeai as genai
             
-            if mode == 'read':
-                focus = "focus on pronunciation, pacing, clarity, and how naturally the text was read"
-            else:
-                focus = "evaluate natural speaking ability, spontaneity, and conversational flow"
-            
-            prompt = f"""Analyze this English speaking sample and provide structured feedback.
-
-Topic: {topic}
+            # Ultra-optimized prompt for fastest responses (minimal tokens)
+            prompt = f"""Analyze speech. Topic: {topic}
 Transcript: "{transcript}"
 
-Evaluate this speech on the following criteria and respond with ONLY valid JSON (no markdown, no code blocks):
+JSON only:
 {{
-    "grammar_score": <number 1-10>,
-    "vocabulary_score": <number 1-10>,
-    "fluency_score": <number 1-10>,
-    "topic_relevance_score": <number 1-10>,
-    "feedback": "<2-3 sentence specific feedback about grammar, vocabulary, fluency, and {focus}>"
-}}
-
-Scoring guidelines:
-- Grammar (1-10): Correct sentence structure, tense, articles, prepositions. 1=Many errors, 10=Perfect
-- Vocabulary (1-10): Range of words, word choice appropriateness. 1=Very limited, 10=Excellent range
-- Fluency (1-10): Smooth delivery, natural pace, minimal hesitations. 1=Very choppy, 10=Native-like
-- Topic Relevance (1-10): How well the response addresses the topic. 1=Off-topic, 10=Perfectly on-topic
-
-Respond ONLY with the JSON object, nothing else."""
+    "grammar_score": <1-10>,
+    "vocabulary_score": <1-10>,
+    "fluency_score": <1-10>,
+    "topic_relevance_score": <1-10>,
+    "grammar_tips": ["<tip1>", "<tip2>"],
+    "fluency_tips": ["<tip1>", "<tip2>"],
+    "summary": "<brief feedback>"
+}}"""
 
             model = genai.GenerativeModel('gemini-2.5-flash')
             print(f"[GEMINI] Sending request to Gemini 2.5 Flash model (no streaming)...")
@@ -257,6 +245,13 @@ Respond ONLY with the JSON object, nothing else."""
             analysis['fluency_score'] = max(1, min(10, float(analysis.get('fluency_score', 5))))
             analysis['topic_relevance_score'] = max(1, min(10, float(analysis.get('topic_relevance_score', 5))))
             
+            # Ensure tips are lists (2 per section for speed)
+            analysis['grammar_tips'] = analysis.get('grammar_tips', [])[:2]
+            analysis['fluency_tips'] = analysis.get('fluency_tips', [])[:2]
+            analysis['summary'] = analysis.get('summary', 'Great effort!')
+            
+            # Legacy feedback field for backward compatibility
+            analysis['feedback'] = analysis.get('summary', 'Great effort!')
             analysis['transcript'] = transcript
             
             print(f"[GEMINI] Final analysis: {analysis}")
@@ -268,32 +263,20 @@ Respond ONLY with the JSON object, nothing else."""
             async with httpx.AsyncClient(timeout=30) as client:
                 url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}'
                 
-                if mode == 'read':
-                    focus = "focus on pronunciation, pacing, clarity, and how naturally the text was read"
-                else:
-                    focus = "evaluate natural speaking ability, spontaneity, and conversational flow"
-                
-                prompt = f"""Analyze this English speaking sample and provide structured feedback.
-
-Topic: {topic}
+                # Ultra-optimized prompt for fastest responses (minimal tokens)
+                prompt = f"""Analyze speech. Topic: {topic}
 Transcript: "{transcript}"
 
-Evaluate this speech on the following criteria and respond with ONLY valid JSON (no markdown, no code blocks):
+JSON only:
 {{
-    "grammar_score": <number 1-10>,
-    "vocabulary_score": <number 1-10>,
-    "fluency_score": <number 1-10>,
-    "topic_relevance_score": <number 1-10>,
-    "feedback": "<2-3 sentence specific feedback about grammar, vocabulary, fluency, and {focus}>"
-}}
-
-Scoring guidelines:
-- Grammar (1-10): Correct sentence structure, tense, articles, prepositions. 1=Many errors, 10=Perfect
-- Vocabulary (1-10): Range of words, word choice appropriateness. 1=Very limited, 10=Excellent range
-- Fluency (1-10): Smooth delivery, natural pace, minimal hesitations. 1=Very choppy, 10=Native-like
-- Topic Relevance (1-10): How well the response addresses the topic. 1=Off-topic, 10=Perfectly on-topic
-
-Respond ONLY with the JSON object, nothing else."""
+    "grammar_score": <1-10>,
+    "vocabulary_score": <1-10>,
+    "fluency_score": <1-10>,
+    "topic_relevance_score": <1-10>,
+    "grammar_tips": ["<tip1>", "<tip2>"],
+    "fluency_tips": ["<tip1>", "<tip2>"],
+    "summary": "<brief feedback>"
+}}"""
 
                 payload = {
                     "contents": [
@@ -335,6 +318,13 @@ Respond ONLY with the JSON object, nothing else."""
                         analysis['fluency_score'] = max(1, min(10, float(analysis.get('fluency_score', 5))))
                         analysis['topic_relevance_score'] = max(1, min(10, float(analysis.get('topic_relevance_score', 5))))
                         
+                        # Ensure tips are lists (2 per section for speed)
+                        analysis['grammar_tips'] = analysis.get('grammar_tips', [])[:2]
+                        analysis['fluency_tips'] = analysis.get('fluency_tips', [])[:2]
+                        analysis['summary'] = analysis.get('summary', 'Great effort!')
+                        
+                        # Legacy feedback field for backward compatibility
+                        analysis['feedback'] = analysis.get('summary', 'Great effort!')
                         analysis['transcript'] = transcript
                         
                         print(f"[GEMINI] Final analysis: {analysis}")
@@ -346,6 +336,9 @@ Respond ONLY with the JSON object, nothing else."""
                     'vocabulary_score': 5.0,
                     'fluency_score': 5.0,
                     'topic_relevance_score': 5.0,
+                    'grammar_tips': [],
+                    'fluency_tips': [],
+                    'summary': 'Unable to analyze speech at this time. Please try again.',
                     'feedback': 'Unable to analyze speech at this time. Please try again.',
                     'transcript': transcript,
                 }
@@ -357,6 +350,9 @@ Respond ONLY with the JSON object, nothing else."""
             'vocabulary_score': 5.0,
             'fluency_score': 5.0,
             'topic_relevance_score': 5.0,
+            'grammar_tips': [],
+            'fluency_tips': [],
+            'summary': 'Error parsing analysis. Please try again.',
             'feedback': 'Error parsing analysis. Please try again.',
             'transcript': transcript,
         }
@@ -369,6 +365,9 @@ Respond ONLY with the JSON object, nothing else."""
             'vocabulary_score': 5.0,
             'fluency_score': 5.0,
             'topic_relevance_score': 5.0,
+            'grammar_tips': [],
+            'fluency_tips': [],
+            'summary': f'Analysis error: {str(e)}',
             'feedback': f'Analysis error: {str(e)}',
             'transcript': transcript,
         }

@@ -4,11 +4,18 @@ import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, error: authError } = useAuth();
+  const { login, error: authError, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // If already logged in, redirect to dashboard
+  React.useEffect(() => {
+    if (user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,6 +40,15 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-xl w-full">
+        <button
+          onClick={() => navigate('/landing')}
+          className="mb-6 flex items-center gap-2 text-gray-600 hover:text-black transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Home
+        </button>
         <h1 className="text-4xl font-bold text-black mb-2 app-heading">Welcome Back</h1>
         <p className="text-gray-600 mb-8">Continue your speaking journey</p>
 

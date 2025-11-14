@@ -71,9 +71,9 @@ export default function ResultsPage() {
         {/* Continue Button */}
         <button
           onClick={handleContinue}
-          className="px-8 py-4 bg-linear-to-r from-green-500 to-emerald-600 text-white font-bold text-lg rounded-lg hover:shadow-xl transform hover:scale-105 transition-all"
+          className="px-8 py-4 bg-linear-to-r from-green-500 to-emerald-600 text-white font-bold text-lg rounded-xl hover:shadow-xl transform hover:scale-105 transition-all"
         >
-          Continue to Dashboard ✨
+          Continue to Dashboard
         </button>
       </div>
     </div>

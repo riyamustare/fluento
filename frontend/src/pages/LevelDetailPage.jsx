@@ -8,7 +8,7 @@ import Teleprompter from '../components/Teleprompter';
 export default function LevelDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getLevelById, isLevelUnlocked } = useProgress();
+  const { getLevelById } = useProgress();
   const [level, setLevel] = useState(null);
   const [mode, setMode] = useState(null); // 'continue' or 'read'
   const [loading, setLoading] = useState(true);
@@ -37,25 +37,39 @@ export default function LevelDetailPage() {
   }, [isRecording]);
 
   useEffect(() => {
+    let isMounted = true;
+
     const loadLevel = async () => {
-      const preferences = JSON.parse(sessionStorage.getItem('preferences') || '{}');
-      setLanguage(preferences.language || 'English');
-      
-      const levelData = await getLevelById(id);
-      if (levelData) {
-        console.log('[LevelDetailPage] Level loaded:', levelData);
-        console.log('[LevelDetailPage] Text:', levelData.text);
-        console.log('[LevelDetailPage] Text German:', levelData.text_german);
-        if (!isLevelUnlocked(levelData.id)) {
-          navigate('/');
+      try {
+        const preferences = JSON.parse(sessionStorage.getItem('preferences') || '{}');
+        setLanguage(preferences.language || 'English');
+        
+        // Get level data
+        const levelData = await getLevelById(id);
+        if (!isMounted) return;
+        
+        if (!levelData) {
+          console.log('[LevelDetailPage] Level not found, redirecting');
+          navigate('/', { replace: true });
           return;
         }
+        
         setLevel(levelData);
+        setLoading(false);
+      } catch (error) {
+        console.error('[LevelDetailPage] Error loading level:', error);
+        if (isMounted) {
+          navigate('/', { replace: true });
+        }
       }
-      setLoading(false);
     };
+
     loadLevel();
-  }, [id, getLevelById, isLevelUnlocked, navigate]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, getLevelById, navigate]);
 
   const handleRecordingComplete = async (chunks) => {
     if (chunks.length === 0) {
@@ -267,10 +281,32 @@ export default function LevelDetailPage() {
       {/* Analyzing Overlay */}
       {analyzing && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-black mb-4"></div>
-            <p className="text-xl font-bold text-gray-800">analyzing your speech...</p>
-            <p className="text-gray-600 mt-2">this may take a moment</p>
+          <div className="bg-white rounded-2xl p-8 text-center max-w-sm">
+            <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-black mb-6"></div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">Analyzing Your Speech</h3>
+            <p className="text-gray-600 mb-6">We're processing your response with AI...</p>
+            
+            {/* Progress Steps */}
+            <div className="space-y-3 text-left mb-6">
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm text-gray-700">Transcribing audio</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-black"></div>
+                <span className="text-sm text-gray-700">Evaluating speech</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-gray-300 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm text-gray-500">Preparing results</span>
+              </div>
+            </div>
+            
+            <p className="text-xs text-gray-500">This usually takes 30-45 seconds</p>
           </div>
         </div>
       )}

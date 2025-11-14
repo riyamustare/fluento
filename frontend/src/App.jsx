@@ -6,7 +6,6 @@ import { ProgressProvider } from './context/ProgressContext';
 
 // Pages
 import LandingPage from './pages/LandingPage';
-import SelectPage from './pages/SelectPage';
 import SignupPage from './pages/SignupPage';
 import LoginPage from './pages/LoginPage';
 import LevelsDashboard from './pages/LevelsDashboard';
@@ -29,31 +28,38 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/landing" replace />;
   }
 
   return children;
 };
 
 function AppRoutes() {
+  const { user } = useAuth();
+
   return (
     <Routes>
+      {/* Root route - show Landing for non-authenticated, Dashboard for authenticated */}
       <Route
         path="/"
         element={
-          <ProtectedRoute>
+          user ? (
             <ProgressProvider>
               <LevelsDashboard />
             </ProgressProvider>
-          </ProtectedRoute>
+          ) : (
+            <LandingPage />
+          )
         }
       />
-      <Route path="/landing" element={<LandingPage />} />
-      <Route path="/select" element={<SelectPage />} />
+      {/* Legacy /landing route for backwards compatibility */}
+      <Route
+        path="/landing"
+        element={user ? <Navigate to="/" replace /> : <LandingPage />}
+      />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/login" element={<LoginPage />} />
-      {/* legacy /levels path redirected to root */}
-      <Route path="/levels" element={<Navigate to="/" replace />} />
+      {/* Level detail page - protected route with ProgressProvider */}
       <Route
         path="/level/:id"
         element={
@@ -64,6 +70,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      {/* Results page - protected route with ProgressProvider */}
       <Route
         path="/results"
         element={
@@ -74,6 +81,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      {/* Catch-all redirect */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { levelsAPI } from '../utils/api';
+import { levelsAPI, feedbackAPI } from '../utils/api';
 
 const ProgressContext = createContext();
 
 export const ProgressProvider = ({ children }) => {
   const [levels, setLevels] = useState([]);
   const [userProgress, setUserProgress] = useState(null);
+  const [userFeedback, setUserFeedback] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -41,6 +42,17 @@ export const ProgressProvider = ({ children }) => {
     }
   }, []);
 
+  const fetchUserFeedback = useCallback(async () => {
+    try {
+      const response = await feedbackAPI.getAllUserFeedback();
+      setUserFeedback(response.data || []);
+      return response.data || [];
+    } catch (err) {
+      console.error('Failed to fetch user feedback:', err);
+      return [];
+    }
+  }, []);
+
   const getLevelById = useCallback(async (id) => {
     try {
       const response = await levelsAPI.getById(id);
@@ -64,10 +76,12 @@ export const ProgressProvider = ({ children }) => {
       value={{
         levels,
         userProgress,
+        userFeedback,
         loading,
         error,
         fetchLevels,
         fetchUserProgress,
+        fetchUserFeedback,
         getLevelById,
         isLevelUnlocked,
       }}

@@ -3,6 +3,233 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProgress } from '../context/ProgressContext';
 
+// Stats Card Component with expandable activity tracker
+function StatsCard({ userProgress, userFeedback }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Calculate league based on XP thresholds
+  const calculateLeague = (xp) => {
+    const leagues = [
+      { name: 'Bronze', color: '#CD7F32', minXp: 0 },
+      { name: 'Silver', color: '#C0C0C0', minXp: 500 },
+      { name: 'Gold', color: '#FFD700', minXp: 1500 },
+      { name: 'Diamond', color: '#B9F2FF', minXp: 3000 },
+      { name: 'Ace', color: '#FF1493', minXp: 6000 }
+    ];
+    
+    for (let i = leagues.length - 1; i >= 0; i--) {
+      if (xp >= leagues[i].minXp) {
+        return leagues[i];
+      }
+    }
+    return leagues[0];
+  };
+  
+  // Generate activity data from actual feedback (completion dates)
+  const generateActivityData = () => {
+    const data = [];
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setMonth(startDate.getMonth() - 6);
+    
+    // Round to start of week
+    startDate.setDate(startDate.getDate() - startDate.getDay());
+    
+    // Create a set of dates when user was active (completed levels)
+    const activeDates = new Set();
+    if (userFeedback && userFeedback.length > 0) {
+      userFeedback.forEach(feedback => {
+        if (feedback.created_at) {
+          const dateStr = new Date(feedback.created_at).toLocaleDateString();
+          activeDates.add(dateStr);
+        }
+      });
+    }
+    
+    let currentDate = new Date(startDate);
+    while (currentDate <= today) {
+      const dateStr = currentDate.toLocaleDateString();
+      const isActive = activeDates.has(dateStr);
+      
+      data.push({
+        date: new Date(currentDate),
+        isActive: isActive
+      });
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return data;
+  };
+  
+  const activityData = generateActivityData();
+  
+  // Calculate stats
+  const xp = userProgress?.xp || 0;
+  const completedCount = userProgress?.completed_levels?.length || 0;
+  const league = calculateLeague(xp);
+  
+  return (
+    <div>
+      {/* Stats Grid - 3 columns */}
+      <div className="grid grid-cols-3 gap-6 mb-6">
+        <div className="text-center">
+          <div className="text-3xl font-bold text-black">{xp}</div>
+          <div className="text-xs text-gray-500 uppercase tracking-wide app-subtitle">XP</div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-black">{completedCount}</div>
+          <div className="text-xs text-gray-500 uppercase tracking-wide app-subtitle">Completed</div>
+        </div>
+        <div className="text-center">
+          <div 
+            className="text-3xl font-bold" 
+            style={{ color: league.color }}
+          >
+            {league.name}
+          </div>
+          <div className="text-xs text-gray-500 uppercase tracking-wide app-subtitle">League</div>
+        </div>
+      </div>
+      
+      {/* Expand/Collapse Button */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-center gap-2 py-3 text-sm text-gray-600 hover:text-black transition-colors app-subtitle"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+        {isExpanded ? 'Hide Activity' : 'View Activity'}
+      </button>
+      
+      {/* GitHub-style Activity Tracker */}
+      {isExpanded && (
+        <div className="mt-4 overflow-x-auto">
+          <ActivityTracker data={activityData} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// GitHub-style Activity Tracker
+function ActivityTracker({ data }) {
+  const COLUMN_WIDTH = 20; // bigger column width so grid fills container
+
+  // Build weekly chunks
+  const weeks = [];
+  let currentWeek = [];
+
+  data.forEach((day, index) => {
+    currentWeek.push(day);
+    if (day.date.getDay() === 6 || index === data.length - 1) {
+      weeks.push([...currentWeek]);
+      currentWeek = [];
+    }
+  });
+
+  const getColor = (isActive) => {
+    return isActive ? "rgba(0,0,0,0.85)" : "rgba(32,36,44,0.08)";
+  };
+
+  return (
+    <div className="py-2">
+      <div className="flex gap-2">
+        {/* Day labels */}
+        <div className="flex flex-col gap-1.5 justify-between mr-3 mt-[18px]">
+          <div className="text-[10px] text-gray-400">Mon</div>
+          <div className="text-[10px] text-gray-400">Wed</div>
+          <div className="text-[10px] text-gray-400">Fri</div>
+          <div className="text-[10px] text-gray-400">Sun</div>
+        </div>
+
+        {/* Grid container */}
+        <div className="flex-1">
+
+          {/* Month labels */}
+          <div className="flex mb-2 h-4">
+            {weeks.map((week, weekIndex) => {
+              const firstDay = week[0];
+              const monthName = firstDay.date.toLocaleString("default", {
+                month: "short",
+              });
+
+              const shouldShow =
+                weekIndex === 0 || firstDay.date.getDate() <= 7;
+
+              return (
+                <div
+                  key={weekIndex}
+                  className="text-[11px] text-gray-400"
+                  style={{ width: `${COLUMN_WIDTH}px` }}
+                >
+                  {shouldShow ? monthName : ""}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Calendar grid */}
+          <div className="flex gap-[3px]">
+            {weeks.map((week, weekIndex) => (
+              <div
+                key={weekIndex}
+                className="flex flex-col gap-[3px]"
+                style={{ width: `${COLUMN_WIDTH}px` }}
+              >
+                {Array.from({ length: 7 }).map((_, dayIndex) => {
+                  const day = week.find((d) => d.date.getDay() === dayIndex);
+
+                  return (
+                    <div
+                      key={dayIndex}
+                      className="w-4 h-4 rounded-sm transition-all hover:ring-1 hover:ring-gray-500"
+                      style={{
+                        backgroundColor: day
+                          ? getColor(day.isActive)
+                          : "transparent",
+                      }}
+                      title={
+                        day
+                          ? `${day.date.toLocaleDateString()}: ${
+                              day.isActive ? "Active" : "Inactive"
+                            }`
+                          : ""
+                      }
+                    ></div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center justify-end gap-3 mt-4 text-xs text-gray-500">
+        <span className="app-subtitle">Inactive</span>
+        <div
+          className="w-4 h-4 rounded-sm"
+          style={{ backgroundColor: "rgba(32,36,44,0.08)" }}
+        ></div>
+        <div
+          className="w-4 h-4 rounded-sm"
+          style={{ backgroundColor: "rgba(0,0,0,0.85)" }}
+        ></div>
+        <span className="app-subtitle">Active</span>
+      </div>
+    </div>
+  );
+}
+
+
+
 // Helper: render a title for a level. If a custom title exists and isn't the generic
 // 'Introduce Yourself', show it; otherwise use the topic as the title.
 function LevelTitle({ level }) {
@@ -62,28 +289,28 @@ function LevelDescription({ level }) {
 export default function LevelsDashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { levels, userProgress, error, fetchLevels, fetchUserProgress, isLevelUnlocked } = useProgress();
+  const { levels, userProgress, userFeedback, error, fetchLevels, fetchUserProgress, fetchUserFeedback, isLevelUnlocked } = useProgress();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       if (!user) {
-        navigate('/login');
+        navigate('/landing', { replace: true });
         return;
       }
       try {
-        await Promise.all([fetchLevels(), fetchUserProgress()]);
+        await Promise.all([fetchLevels(), fetchUserProgress(), fetchUserFeedback()]);
       } catch (err) {
         console.error('Failed to load data:', err);
       }
       setLoading(false);
     };
     loadData();
-  }, [user, navigate, fetchLevels, fetchUserProgress]);
+  }, [user, navigate, fetchLevels, fetchUserProgress, fetchUserFeedback]);
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/landing', { replace: true });
   };
 
   if (loading) {
@@ -139,16 +366,7 @@ export default function LevelsDashboard() {
         {/* XP Progress */}
         {userProgress && (
           <div className="bg-white rounded-xl p-6 mb-6" style={{ boxShadow: 'rgba(0, 0, 0, 0.12) 0px 12px 32px -1px' }}>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-base font-semibold text-gray-900 app-subtitle">Total XP: {userProgress.total_xp || 0}</span>
-              <span className="text-sm text-gray-600 app-subtitle">{userProgress.completed_levels?.length || 0} Completed</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="bg-black h-3 rounded-full transition-all duration-500"
-                style={{ width: `${((userProgress.completed_levels?.length || 0) / 5) * 100}%` }}
-              ></div>
-            </div>
+            <StatsCard userProgress={userProgress} userFeedback={userFeedback} />
           </div>
         )}
       </div>
@@ -160,10 +378,24 @@ export default function LevelsDashboard() {
             const isUnlocked = isLevelUnlocked(level.id);
             const isCompleted = userProgress?.completed_levels?.includes(level.id);
 
+            const handleLevelClick = (e) => {
+              e.preventDefault();
+              if (isUnlocked) {
+                navigate(`/level/${level.id}`);
+              }
+            };
+
             return (
               <div
                 key={level.id}
-                onClick={() => isUnlocked && navigate(`/level/${level.id}`)}
+                onClick={handleLevelClick}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleLevelClick(e);
+                  }
+                }}
+                role="button"
+                tabIndex={isUnlocked ? 0 : -1}
                 className={`group p-6 
                   ${isUnlocked ? 'cursor-pointer bg-white' : 'opacity-50 cursor-not-allowed bg-gray-100'} 
                   ${isCompleted ? 'ring-2 ring-green-500' : ''}`}
@@ -189,8 +421,7 @@ export default function LevelsDashboard() {
               >
                 <div className="flex justify-between items-start">
                   {/* Left Side - Content */}
-                  <div className="flex-1 pr-4">
-                      {/** Title and description helpers: use provided title/description if available, otherwise derive from topic and level id */}
+                  <div className="flex-1 pr-4 ">
                       <LevelTitle level={level} />
                       <LevelDescription level={level} />
                     </div>
