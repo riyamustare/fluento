@@ -152,11 +152,16 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
 else:
-    CORS_ALLOWED_ORIGINS = [
-        'https://fluentoai.vercel.app',
-        'https://fluento-cgbbp9uvs-riyas-projects-602fe862.vercel.app',
-        'https://fluento-taupe.vercel.app',
-    ]
+    # Parse CORS_ALLOWED_ORIGINS from environment variable
+    _cors_origins = config('CORS_ALLOWED_ORIGINS', default='')
+    if _cors_origins:
+        CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _cors_origins.split(',') if origin.strip()]
+    else:
+        CORS_ALLOWED_ORIGINS = [
+            'https://fluentoai.vercel.app',
+            'https://fluento-cgbbp9uvs-riyas-projects-602fe862.vercel.app',
+            'https://fluento-taupe.vercel.app',
+        ]
 
     # Allow ALL Vercel preview deployments
     CORS_ALLOWED_ORIGIN_REGEXES = [
